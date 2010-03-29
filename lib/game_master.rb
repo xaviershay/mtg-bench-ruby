@@ -1,54 +1,10 @@
-class PublicGameState
-end
+require 'card'
+require 'action'
+require 'state'
+require 'cost'
+require 'ability'
 
-class PrivateGameState
-end
-
-class GameState
-  attr_accessor :players, :battlefield, :stack, :current_step, :turn, :active_player
-
-  def initialize
-    self.players = []
-    self.battlefield = []
-    self.battlefield.extend(Zone)
-    self.battlefield.name = "Battlefield"
-  end
-
-  # @return true if action could be completed
-  def executeAction(action)
-    action.execute(self)
-  end
-
-  def apnap_players
-    self.players # TODO: Start with active player
-  end
-
-  def public
-    PublicGameState.new
-  end
-
-  def private(player)
-    player
-  end
-
-  def pp
-    players.each do |p|
-      puts "Battlefield"
-      battlefield.each do |c|
-        puts "  " + c.name
-      end
-      puts "Player: " + p.agent.name
-      puts "  Hand"
-      p.hand.each do |c|
-        puts "    " + c.name
-      end
-      puts "  Library"
-      p.library.each do |c|
-        puts "    " + c.name
-      end
-    end
-  end
-end
+alias :L :lambda
 
 class GameMaster
   attr_accessor :state, :agents
@@ -104,36 +60,6 @@ def log(msg)
   puts msg
 end
 
-module Action
-  class Base
-    attr_accessor :player
-
-    def initialize(player)
-      self.player = player
-    end
-  end
-
-  class DrawCard < Base
-    def execute(state)
-      player.hand.add(player.library[0])
-    end
-  end
-
-  class PlayLand < Base
-    attr_accessor :land
-
-    def initialize(player, land)
-      super(player)
-      self.land = land # TODO: Assert land is a land
-    end
-
-    def execute(state)
-      player.lands_played_this_turn += 1
-      state.battlefield.add(land)
-    end
-  end
-end
-
 module Zone
   def name=(value)
     @name = value
@@ -156,46 +82,13 @@ module Zone
     puts "Removing #{card.name} from " + self.name
     delete(card)
   end
-end
 
-module Card
-  class Base
-    attr_accessor :location, :name
-
-    def initialize
-      self.name = "Unknown Card " + rand(1000).to_s
-    end
-  end
-
-  module BasicLand
-    def name
-      self.class.to_s.split('::').last
-    end
-
-    def types
-      %w(basic_land land)
-    end
-  end
-
-  class Mountain < Base
-    def colors
-      %w(red)
-    end
-
-    include BasicLand
-  end
-
-  class Forest < Base
-    def colors
-      %w(green)
-    end
-
-    include BasicLand
+  def shuffle!
   end
 end
 
 class Player
-  attr_accessor :agent, :library, :hand, :lands_played_this_turn
+  attr_accessor :agent, :library, :hand, :lands_played_this_turn, :mana_pool
 
   def initialize(agent)
     self.agent = agent
@@ -206,9 +99,13 @@ class Player
     self.library.extend(Zone)
     self.library.name = "Library"
     self.lands_played_this_turn = 0
+    self.mana_pool = {
+      'green' => 0
+    }
 
     puts "Setting up deck"
     agent.deck.each do |card|
+      card.owner = self
       library.add(card)
     end
   end
