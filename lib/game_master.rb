@@ -32,7 +32,7 @@ class GameMaster
   def deal
     log "Dealing"
     state.apnap_players.each do |p|
-      7.times { state.executeAction(Action::DrawCard.new(p)) }
+      3.times { state.executeAction(Action::DrawCard.new(p)) }
     end
   end
 

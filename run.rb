@@ -3,6 +3,8 @@ $LOAD_PATH.unshift('lib')
 require 'game_master'
 
 class LandRamper
+  CARDS_IN_DECK = 30
+
   attr_accessor :configuration
 
   include Card
@@ -14,8 +16,7 @@ class LandRamper
 
   def deck
     (0..3).to_a.map { RampantGrowth.new } +
-    configuration.inject([]) do |cards, (type, percent)|
-      amount = (16 * percent).round
+    configuration.inject([]) do |cards, (type, amount)|
       cards += (0..amount-1).map { type.new }
     end
   end
@@ -88,20 +89,29 @@ class LandRamper
     a = configuration
     k = 0.1 # 10% chance of flipping
     self.configuration = a.inject({}) {|b, (key, value)|
-      b.update(key => (rand < k) ? rand : value)
+      b.update(key => (rand < k) ? rand((CARDS_IN_DECK/3).round) : value)
     }
+    normalize!
     self
   end
 
   def normalize!
     normalize = lambda do |x|
       total = x.values.inject {|y, z| y + z }
-      diff = (1 - total) / x.size.to_f
+      multiplier = 1 / total.to_f
       x.inject({}) do |hash, (key, value)|
-        hash.update(key => value + diff)
+        hash.update(key => value * multiplier)
       end
     end
-    self.configuration = normalize[configuration]
+
+    expand = lambda do |x|
+      x.inject({}) do |hash, (key, percent)|
+        amount = (CARDS_IN_DECK * percent).round
+        hash.update(key => amount)
+      end
+    end
+
+    self.configuration = expand[normalize[configuration]]
   end
 end
 
@@ -118,6 +128,7 @@ contenders = (0..1).to_a.map {
 include Card
 
 puts contenders.map(&:configuration).inspect
+winners = []
 20.times do |i|
   puts "Starting run #{i}"
   puts contenders.map(&:configuration).inspect
@@ -126,17 +137,13 @@ puts contenders.map(&:configuration).inspect
       game = GameMaster.new(Time.now.to_f * 10000 + i)
       game.registerAgent(agent)
       game.setup
+      growth = game.state.active_player.library.detect {|card| card.is_a?(RampantGrowth) }
+      game.state.active_player.hand.add(growth) if growth
       while true
         break unless game.runTurn
         break if [Forest, Island, Plains, Swamp, Mountain].all? {|land_type|
           game.state.battlefield.detect {|card| card.is_a?(land_type) }
         }
-      end
-      if game.state.turn < 5
-        game.state.pp
-        puts [Forest, Island, Plains, Swamp, Mountain].map {|land_type|
-            !!game.state.battlefield.detect {|card| card.is_a?(land_type) }
-          }.inspect
       end
       game.state.turn
     end
@@ -146,8 +153,10 @@ puts contenders.map(&:configuration).inspect
     a.update(agent => score)
   end
 
-  puts "Average fitness: " + (results.values.inject {|d, e| d + e } / results.size.to_f).to_s
+  average_fitness = (results.values.inject {|d, e| d + e } / results.size.to_f)
+  puts "Average fitness: " + average_fitness.to_s
   winners = results.to_a.sort_by {|a| a.last }[0..3] # Top 5
+  break if average_fitness < 4.6
   contenders = (0..9).to_a.map {|x|
     father = winners[rand(winners.size)]
     mother = (winners - [father])[rand(winners.size-1)]
@@ -155,7 +164,13 @@ puts contenders.map(&:configuration).inspect
   }
 end
 
-puts contenders.map(&:configuration).inspect
+winner = winners.first
+
+puts "4 x [card]Rampant Growth[/card]"
+winner.first.configuration.each do |card_type, amount|
+  puts "#{amount} x [card]#{card_type.to_s.split("::").last}[/card]"
+end
+puts "Average turns to 5 colors on the board: #{winner.last}"
 
 a = {
   'green' => 0.2,
