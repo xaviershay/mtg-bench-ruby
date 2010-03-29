@@ -22,6 +22,8 @@ module Action
 
   class DrawCard < Base
     def execute(state)
+      return false if player.library.empty?
+
       player.hand.add(player.library[0])
     end
   end
@@ -31,6 +33,7 @@ module Action
 
     def initialize(player, land)
       super(player)
+      raise unless land.has_type?(:land)
       self.land = land # TODO: Assert land is a land
     end
 

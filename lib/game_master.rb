@@ -70,7 +70,7 @@ class GameMaster
 end
 
 def log(msg)
-  #puts msg
+ # puts msg
 end
 
 module Zone
@@ -125,7 +125,10 @@ class Player
     self.lands_played_this_turn = 0
     self.mana_pool = {
       'green' => 0,
-      'red' => 0
+      'red' => 0,
+      'black' => 0,
+      'white' => 0,
+      'blue' => 0
     }
 
     log "Setting up deck"

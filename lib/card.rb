@@ -72,6 +72,30 @@ module Card
     include BasicLand
   end
 
+  class Island < Base
+    def colors
+      %w(blue)
+    end
+
+    include BasicLand
+  end
+
+  class Swamp < Base
+    def colors
+      %w(black)
+    end
+
+    include BasicLand
+  end
+
+  class Plains < Base
+    def colors
+      %w(white)
+    end
+
+    include BasicLand
+  end
+
   class RampantGrowth < Base
     def colors
       %w(green)
