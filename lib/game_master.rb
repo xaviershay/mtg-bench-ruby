@@ -37,6 +37,11 @@ class GameMaster
 
   def runTurn
     log("TURN #{state.turn}")
+    log("STEP: Untap")
+    state.battlefield.select {|x| x.tapped? && x.controller == state.active_player }.each do |c|
+      state.executeAction(Action::Untap.new(state.active_player, c))
+    end
+
     # Main step
     log("STEP: Main")
     allPassed = false
@@ -50,6 +55,7 @@ class GameMaster
     end
 
     # Cleanup step
+    log("STEP: Cleanup")
     state.players.each do |p|
       p.lands_played_this_turn = 0
     end
@@ -88,7 +94,7 @@ module Zone
 end
 
 class Player
-  attr_accessor :agent, :library, :hand, :lands_played_this_turn, :mana_pool
+  attr_accessor :agent, :library, :hand, :graveyard, :lands_played_this_turn, :mana_pool
 
   def initialize(agent)
     self.agent = agent
@@ -98,6 +104,10 @@ class Player
     self.library = []
     self.library.extend(Zone)
     self.library.name = "Library"
+    self.graveyard = []
+    self.graveyard.extend(Zone)
+    self.graveyard.name = "Graveyard"
+
     self.lands_played_this_turn = 0
     self.mana_pool = {
       'green' => 0

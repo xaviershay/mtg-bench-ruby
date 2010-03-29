@@ -7,13 +7,18 @@ module Card
       self.tapped = true
     end
 
+    def untap!
+      return false if !tapped
+      self.tapped = false
+    end
+
     def tapped?
       tapped
     end
   end
 
   class Base
-    attr_accessor :location, :name, :owner, :abilities
+    attr_accessor :location, :name, :owner, :abilities, :controller
 
     def initialize
       self.name = "Unknown Card " + rand(1000).to_s
@@ -26,6 +31,10 @@ module Card
 
     def name
       self.class.to_s.split('::').last
+    end
+
+    def controller
+      owner
     end
 
     include InPlay
@@ -77,6 +86,9 @@ module Card
       if card
         card.tapped = true
         state.battlefield.add(card)
+        card.abilities += card.colors.map do |color|
+          Ability::TapForMana.new(card, color, 1)
+        end
       end
       owner.library.shuffle!
     end

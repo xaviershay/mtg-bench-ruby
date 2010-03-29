@@ -7,6 +7,19 @@ module Action
     end
   end
 
+  class Untap < Base
+    attr_accessor :card
+
+    def initialize(player, card)
+      super(player)
+      self.card = card
+    end
+
+    def execute(state)
+      card.untap!
+    end
+  end
+
   class DrawCard < Base
     def execute(state)
       player.hand.add(player.library[0])
@@ -44,6 +57,7 @@ module Action
       raise unless options[:activate_abilities][].all? {|mana_action| state.executeAction(mana_action) }
       raise unless cost.satisfy!(state, :mana_pool => player.mana_pool)
       card.resolve(state, options)
+      card.owner.graveyard.add(card)
       puts "Cast #{card.name}"
     end
   end
@@ -54,6 +68,7 @@ module Action
     def initialize(player, ability)
       super(player)
       self.ability = ability
+      raise unless ability
     end
 
     def execute(state)

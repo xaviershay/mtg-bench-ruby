@@ -47,6 +47,10 @@ class GameState
       p.hand.each do |c|
         puts "    " + c.name
       end
+      puts "  Graveyard"
+      p.graveyard.each do |c|
+        puts "    " + c.name
+      end
       puts "  Library"
       p.library.each do |c|
         puts "    " + c.name

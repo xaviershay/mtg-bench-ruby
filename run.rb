@@ -18,9 +18,8 @@ class LandRamper
       actions << Action::PlayLand.new(me, land)
     end
 
-    mana = state.battlefield.detect {|c| c.owner = me && c.has_type?(:land) && c.can_produce_mana?(:green) && !c.tapped? }
+    mana = state.battlefield.detect {|c| c.owner == me && c.has_type?(:land) && c.can_produce_mana?(:green) && !c.tapped? }
     if mana
-      puts "I have untapped forest!"
       growth = me.hand.detect {|x| x.is_a?(Card::RampantGrowth) }
       actions << Action::Cast.new(me, growth,
         :activate_abilities => L{ [Action::ActivateAbility.new(me, mana.abilities[0])] },
