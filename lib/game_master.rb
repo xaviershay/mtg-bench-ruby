@@ -110,7 +110,8 @@ class Player
 
     self.lands_played_this_turn = 0
     self.mana_pool = {
-      'green' => 0
+      'green' => 0,
+      'red' => 0
     }
 
     puts "Setting up deck"

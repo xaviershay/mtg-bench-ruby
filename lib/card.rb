@@ -78,7 +78,7 @@ module Card
     end
 
     def cost
-      Cost::Mana.new('green')
+      Cost::ColoredMana.new('green') + Cost::ColorlessMana.new
     end
 
     def resolve(state, options)
