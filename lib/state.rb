@@ -6,6 +6,7 @@ class GameState
   attr_accessor :players, :battlefield, :stack, :current_step, :turn, :active_player
 
   def initialize
+    self.turn = 0
     self.players = []
     self.battlefield = []
     self.battlefield.extend(Zone)
@@ -37,6 +38,8 @@ class GameState
       ret += " (Tapped)" if card.tapped?
       ret
     end
+    puts
+    puts "Game @ Turn #{turn}"
     players.each do |p|
       puts "Battlefield"
       battlefield.each do |c|

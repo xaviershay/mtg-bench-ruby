@@ -9,7 +9,8 @@ alias :L :lambda
 class GameMaster
   attr_accessor :state, :agents
 
-  def initialize
+  def initialize(seed)
+    srand(seed)
     self.agents = []
     self.state = GameState.new
   end
@@ -29,18 +30,22 @@ class GameMaster
   end
 
   def deal
-    puts "Dealing"
+    log "Dealing"
     state.apnap_players.each do |p|
       7.times { state.executeAction(Action::DrawCard.new(p)) }
     end
   end
 
   def runTurn
+    state.turn += 1
     log("TURN #{state.turn}")
     log("STEP: Untap")
     state.battlefield.select {|x| x.tapped? && x.controller == state.active_player }.each do |c|
       state.executeAction(Action::Untap.new(state.active_player, c))
     end
+
+    log("STEP: Draw")
+    return false unless state.executeAction(Action::DrawCard.new(state.active_player))
 
     # Main step
     log("STEP: Main")
@@ -59,11 +64,13 @@ class GameMaster
     state.players.each do |p|
       p.lands_played_this_turn = 0
     end
+
+    true
   end
 end
 
 def log(msg)
-  puts msg
+  #puts msg
 end
 
 module Zone
@@ -79,17 +86,24 @@ module Zone
     if (card.location)
       card.location.remove(card)
     end
-    puts "Adding #{card.name} to " + self.name
+    #puts "Adding #{card.name} to " + self.name
     card.location = self
     self << card
   end
 
   def remove(card)
-    puts "Removing #{card.name} from " + self.name
+    #puts "Removing #{card.name} from " + self.name
     delete(card)
   end
 
   def shuffle!
+    n = size
+    until n == 0
+      k = rand(n) #You can see I’m doing rand(n) rather than rand(size)
+      n = n - 1
+      self[n], self[k] = self[k], self[n]
+    end
+    self
   end
 end
 
@@ -114,10 +128,11 @@ class Player
       'red' => 0
     }
 
-    puts "Setting up deck"
+    log "Setting up deck"
     agent.deck.each do |card|
       card.owner = self
       library.add(card)
     end
+    library.shuffle!
   end
 end

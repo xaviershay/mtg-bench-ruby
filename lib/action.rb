@@ -58,7 +58,7 @@ module Action
       raise unless cost.satisfy!(state, :mana_pool => player.mana_pool)
       card.resolve(state, options)
       card.owner.graveyard.add(card)
-      puts "Cast #{card.name}"
+      #puts "Cast #{card.name}"
     end
   end
 
