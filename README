@@ -1,0 +1,7 @@
+= mtg-bench-ruby
+
+Implementation (very very incomplete) of the Magic: The Gathering rule set in ruby. Designed for algorithmic experimentation of decks/AI.
+
+== Quickstart
+
+  ruby run.rb
